@@ -163,6 +163,7 @@ threadpoolctl==3.6.0
 tinycss2==1.4.0
 tomli==2.2.1
 tornado==6.5.2
+tqdm==4.67.1
 traitlets==5.14.3
 types-python-dateutil==2.9.0.20250822
 typing-inspection==0.4.1
