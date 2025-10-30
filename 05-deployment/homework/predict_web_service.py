@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import pickle
 from pydantic import BaseModel
-from flask import jsonify
+
 
 class Campaign(BaseModel):
 	lead_source: str

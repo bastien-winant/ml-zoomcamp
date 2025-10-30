@@ -8,4 +8,4 @@ client = {
 }
 
 pred = requests.post(url, json=client).json()
-print(f"Model conversion prediction: {pred['conversion_probability']:.3f}")
+print(f"Subscription probability: {pred['conversion_probability']:.3f}")
