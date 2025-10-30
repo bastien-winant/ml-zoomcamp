@@ -2,7 +2,6 @@ from fastapi import FastAPI
 import pickle
 from pydantic import BaseModel
 
-
 class Campaign(BaseModel):
 	lead_source: str
 	number_of_courses_viewed: int
@@ -26,3 +25,5 @@ def predict(campaign: Campaign):
 	}
 
 	return result
+
+# uv run uvicorn predict_web_service_v1:app --reload
