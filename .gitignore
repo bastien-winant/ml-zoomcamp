@@ -203,4 +203,7 @@ __marimo__/
 .streamlit/secrets.toml
 
 *.csv
+*.CDX
+*.FPT
+*.DBF
 *.bin
