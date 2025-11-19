@@ -2,8 +2,9 @@ from dbfread import DBF
 import pandas as pd
 import numpy as np
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.preprocessing import OneHotEncoder
+from sklearn.feature_extraction import DictVectorizer
 from sklearn.model_selection import train_test_split
+import pickle
 
 import warnings
 
@@ -66,7 +67,6 @@ exped_df.drop(['traverse', 'ski', 'parapente'], axis=1, inplace=True)
 # 12 - Did not attempt climb
 # 13 - Attempt rumored
 exped_df = exped_df.loc[~exped_df.termreason.isin([12, 13])]
-
 exped_df.drop('termreason', axis=1, inplace=True)
 
 # remove unused columns
@@ -147,6 +147,7 @@ team_cols = set(team_df.columns)
 df = exped_df.merge(team_df, how='inner')
 assert df.expid.nunique() == df.shape[0]
 
+# flip the target variable to failure
 df['failure'] = 1 - df.success
 df = df.drop(['expid', 'success'], axis=1).reset_index(drop=True)
 
@@ -154,23 +155,18 @@ df = df.drop(['expid', 'success'], axis=1).reset_index(drop=True)
 df_full_train, _, y_full_train, _ = train_test_split(
 	df.drop('failure', axis=1), df.failure, test_size=0.2, random_state=1)
 
+# one-hot encoding
+df_dicts = df_full_train.to_dict(orient='records')
+dv = DictVectorizer(sparse=False)
+dv.fit(df_dicts)
+X = dv.transform(df_dicts)
 
-def one_hot_encoding(df, enc=None):
-	df_categorical = df.select_dtypes(exclude='number').reset_index(drop=True)
-	df_numerical = df.select_dtypes('number').reset_index(drop=True)
-
-	if not enc:
-		enc = OneHotEncoder(sparse_output=False, handle_unknown='infrequent_if_exist', drop='if_binary', dtype=np.int32)
-		enc.fit(df_categorical)
-
-	df_encoded = pd.DataFrame(data=enc.transform(df_categorical))
-
-	X = pd.concat([df_encoded, df_numerical], axis=1).values
-
-	return X, enc
-
-
-X_train, enc = one_hot_encoding(df_full_train)
+# use hyperparameters from GridSearch
 hyper_parameters = {'criterion': 'gini', 'max_depth': 20, 'min_samples_leaf': 15}
 model = DecisionTreeClassifier(**hyper_parameters)
-model.fit(X_train, y_full_train)
+model.fit(X, y_full_train)
+
+# save encoder and model to a file
+output_file = "__".join([f"{key}_{value}" for key, value in hyper_parameters.items()]) + ".bin"
+with open(output_file, 'wb') as f_out:
+	pickle.dump((dv, model), f_out)
